@@ -1,0 +1,866 @@
+/* Saltgate UI kit stylesheet: @font-face (already in index.html), the global html/body/button resets and the static mock HUD/stage sections removed. Otherwise verbatim. */
+:root {
+  /* Game world palette (src/palette.js) */
+  --sg-salt: #f5f1e8;
+  --sg-limewash: #e6dcc6;
+  --sg-tar: #2c2925;
+  --sg-timber: #4a3b2c;
+  --sg-timber-light: #7d6449;
+  --sg-ochre: #a5583a;
+  --sg-sail: #d9c7a2;
+  --sg-sail-ochre: #b8693f;
+  --sg-water-deep: #2f4b52;
+  --sg-water-shallow: #8fa59a;
+  --sg-foam: #f1ede2;
+  --sg-brine: #c98f8a;
+  --sg-sand: #c4ad84;
+  --sg-marsh-low: #6f7a43;
+  --sg-marsh-high: #8f9150;
+  --sg-lavender: #8a7a96;
+  --sg-iron: #3a3b3a;
+
+  /* Printed paper & HUD tokens (index.html) */
+  --sg-paper: #efe5cf;
+  --sg-paper-2: #e4d6b8;
+  --sg-paper-hi: #f6eedd;
+  --sg-paper-hover: #fff8ea;
+  --sg-ink: #2d2a24;
+  --sg-ink-2: #5d5446;
+  --sg-brass: #a8834e;
+  --sg-brass-2: #7d5f33;
+  --sg-brass-hi: #c9a66b;
+  --sg-sea: #3f6168;
+  --sg-rust: #9a4b31;
+  --sg-rust-hover: #833c25;
+  --sg-rule: #b59c72;
+  --sg-rule-soft: rgba(181, 156, 114, 0.48);
+
+  /* Overlays & veils */
+  --sg-scrim: rgba(28, 37, 42, 0.56);
+  --sg-tar-plate: rgba(44, 41, 37, 0.84);
+  --sg-tar-plate-hover: rgba(44, 41, 37, 0.94);
+
+  /* Typography */
+  --sg-font-display: 'Alegreya', Georgia, serif;
+  --sg-font-ui: 'Alegreya Sans', 'Alegreya', Georgia, serif;
+  --sg-text-xs: max(13.5px, 0.85rem);
+  --sg-text-sm: clamp(14px, 1.45vh, 15.5px);
+  --sg-text-md: clamp(15px, 1.6vh, 17px);
+  --sg-text-lg: clamp(17px, 1.85vh, 20px);
+  --sg-text-xl: clamp(26px, 2.9vh, 34px);
+
+  /* Spacing */
+  --sg-space-1: 4px;
+  --sg-space-2: 8px;
+  --sg-space-3: 12px;
+  --sg-space-4: 16px;
+  --sg-space-5: 20px;
+  --sg-space-6: 24px;
+  --sg-space-7: 32px;
+  --sg-space-8: 44px;
+
+  /* Radii & borders */
+  --sg-radius-sm: 2px;
+  --sg-radius-md: 3px;
+  --sg-border: 1px solid var(--sg-rule);
+
+  /* Restrained shadows */
+  --sg-shadow-paper: 0 1px 0 rgba(255, 255, 255, 0.52) inset, 0 8px 24px rgba(28, 22, 14, 0.34), 0 1px 3px rgba(28, 22, 14, 0.36);
+  --sg-shadow-dialog: 0 1px 0 rgba(255, 255, 255, 0.56) inset, 0 14px 36px rgba(20, 16, 10, 0.44), 0 2px 5px rgba(20, 16, 10, 0.35);
+  --sg-shadow-btn: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 2px 6px rgba(24, 18, 10, 0.22);
+
+  /* Motion */
+  --sg-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --sg-dur-fast: 140ms;
+  --sg-dur-panel: 220ms;
+  --sg-dur-veil: 280ms;
+
+  /* Focus rings */
+  --sg-focus-paper: var(--sg-water-deep);
+  --sg-focus-light: var(--sg-salt);
+}
+/* ==========================================================================
+   Title Screen (BAR A3: world stays hero, soft edge veil only behind text)
+   ========================================================================== */
+
+.sg-title-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  padding: clamp(32px, 5vh, 64px) clamp(40px, 5.5vw, 108px);
+}
+
+/* Soft directional atmospheric gradient ONLY on the left edge behind text.
+ * Leaves the salt pan, sluice gate, creek, and sea unobstructed. */
+.sg-title-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(28, 30, 24, 0.66) 0%,
+    rgba(28, 30, 24, 0.48) 22%,
+    rgba(28, 30, 24, 0.16) 42%,
+    rgba(28, 30, 24, 0) 58%
+  );
+}
+
+.sg-title-stack {
+  position: relative;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: clamp(350px, 31vw, 490px);
+  width: 100%;
+  animation: sg-fade-up var(--sg-dur-veil) var(--sg-ease) both;
+}
+
+.sg-wordmark-wrap {
+  margin: 0;
+  width: clamp(320px, 27vw, 456px);
+}
+
+.sg-wordmark {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 2px 6px rgba(20, 22, 16, 0.42));
+}
+
+.sg-tagline {
+  margin: 12px 0 0 2px;
+  font-family: var(--sg-font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(16px, 1.85vh, 20px);
+  letter-spacing: 0.03em;
+  color: var(--sg-limewash);
+  text-shadow: 0 1px 4px rgba(20, 22, 16, 0.62);
+}
+
+.sg-title-actions {
+  margin-top: clamp(26px, 3.8vh, 42px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: clamp(300px, 23vw, 368px);
+}
+
+/* ==========================================================================
+   Buttons (shared grammar across Title, Settings, and Pause)
+   ========================================================================== */
+
+.sg-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 46px;
+  padding: 11px 18px;
+  border-radius: var(--sg-radius-md);
+  border: 1px solid var(--sg-rule);
+  background: var(--sg-paper-hi);
+  color: var(--sg-ink);
+  font-family: var(--sg-font-ui);
+  font-weight: 700;
+  font-size: var(--sg-text-md);
+  letter-spacing: 0.015em;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--sg-dur-fast) var(--sg-ease),
+    border-color var(--sg-dur-fast) var(--sg-ease),
+    color var(--sg-dur-fast) var(--sg-ease),
+    box-shadow var(--sg-dur-fast) var(--sg-ease),
+    transform var(--sg-dur-fast) var(--sg-ease);
+}
+
+.sg-btn:hover,
+.sg-btn.is-hover {
+  background: var(--sg-paper-hover);
+  border-color: var(--sg-brass-2);
+}
+
+.sg-btn:active {
+  transform: translateY(1px);
+}
+
+.sg-btn:focus-visible,
+.sg-btn.is-focus {
+  outline: 2.5px solid var(--sg-focus-paper);
+  outline-offset: 2px;
+}
+
+/* Title Primary Button (warm printed paper plate with brass tide-rule edge) */
+.sg-btn--title-primary {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  padding: 14px 20px 14px 18px;
+  background: linear-gradient(180deg, #f5eedd, #e7dac0);
+  border: 1px solid #c6ae84;
+  border-left: 4px solid var(--sg-brass);
+  color: var(--sg-tar);
+  box-shadow: var(--sg-shadow-paper);
+}
+
+.sg-btn--title-primary .sg-btn-label {
+  font-family: var(--sg-font-display);
+  font-weight: 700;
+  font-size: clamp(19px, 2.05vh, 22px);
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+
+.sg-btn--title-primary .sg-btn-meta {
+  font-family: var(--sg-font-ui);
+  font-weight: 500;
+  font-size: clamp(14px, 1.45vh, 15.5px);
+  color: var(--sg-ink-2);
+  letter-spacing: 0.01em;
+}
+
+.sg-btn--title-primary:hover,
+.sg-btn--title-primary.is-hover {
+  background: linear-gradient(180deg, #fbf6e9, #eee3cb);
+  border-color: var(--sg-brass-hi);
+  border-left-color: var(--sg-ochre);
+  transform: translateX(2px);
+}
+
+.sg-btn--title-primary:focus-visible,
+.sg-btn--title-primary.is-focus {
+  outline: 2.5px solid var(--sg-focus-light);
+  outline-offset: 3px;
+  border-left-color: var(--sg-ochre);
+  box-shadow: 0 0 0 5px rgba(44, 41, 37, 0.45), var(--sg-shadow-paper);
+}
+
+/* Title Secondary Button (tarred-timber enamel plate with sail hairline rule) */
+.sg-btn--title-secondary {
+  justify-content: flex-start;
+  width: 100%;
+  padding: 12px 18px;
+  background: var(--sg-tar-plate);
+  border: 1px solid rgba(217, 199, 162, 0.56);
+  border-left: 4px solid rgba(201, 166, 107, 0.55);
+  color: var(--sg-salt);
+  box-shadow: 0 4px 14px rgba(18, 16, 12, 0.28);
+}
+
+.sg-btn--title-secondary .sg-btn-label {
+  font-weight: 700;
+  font-size: clamp(16px, 1.7vh, 18px);
+}
+
+.sg-btn--title-secondary:hover,
+.sg-btn--title-secondary.is-hover {
+  background: rgba(68, 59, 46, 0.94);
+  border-color: var(--sg-brass-hi);
+  border-left: 5px solid var(--sg-brass-hi);
+  color: #ffffff;
+  box-shadow: 0 0 0 1px rgba(217, 199, 162, 0.35), 0 6px 18px rgba(18, 16, 12, 0.36);
+  transform: translateX(3px);
+}
+
+.sg-btn--title-secondary:focus-visible,
+.sg-btn--title-secondary.is-focus {
+  outline: 2.5px solid var(--sg-focus-light);
+  outline-offset: 3px;
+  background: var(--sg-tar-plate-hover);
+  border-left-color: var(--sg-brass-hi);
+}
+
+/* Dialog Primary Button (solid tar ink, matching index.html .btn.on) */
+.sg-btn--primary {
+  background: var(--sg-tar);
+  border-color: var(--sg-tar);
+  color: var(--sg-salt);
+  box-shadow: 0 2px 6px rgba(24, 18, 10, 0.25);
+}
+
+.sg-btn--primary:hover,
+.sg-btn--primary.is-hover {
+  background: #3d3832;
+  border-color: #3d3832;
+  color: #ffffff;
+}
+
+.sg-btn--primary:focus-visible,
+.sg-btn--primary.is-focus {
+  outline: 2.5px solid var(--sg-focus-paper);
+  outline-offset: 2px;
+}
+
+/* Dialog Secondary Paper Button */
+.sg-btn--secondary {
+  background: var(--sg-paper-hi);
+  border-color: var(--sg-rule);
+  color: var(--sg-ink);
+  box-shadow: var(--sg-shadow-btn);
+}
+
+.sg-btn--secondary:hover,
+.sg-btn--secondary.is-hover {
+  background: var(--sg-paper-hover);
+  border-color: var(--sg-brass-2);
+}
+
+/* Quiet Destructive / Reset Action (pause New season) */
+.sg-btn--quiet-danger {
+  background: var(--sg-paper-hi);
+  border-color: rgba(154, 75, 49, 0.45);
+  color: var(--sg-rust);
+}
+
+.sg-btn--quiet-danger:hover,
+.sg-btn--quiet-danger.is-hover {
+  background: #f9ede5;
+  border-color: var(--sg-rust);
+  color: var(--sg-rust-hover);
+}
+
+/* Confirmed Destructive Button (ochre-rust fill) */
+.sg-btn--danger {
+  background: var(--sg-rust);
+  border-color: var(--sg-rust);
+  color: var(--sg-salt);
+  justify-content: center;
+}
+
+.sg-btn--danger:hover,
+.sg-btn--danger.is-hover {
+  background: var(--sg-rust-hover);
+  border-color: var(--sg-rust-hover);
+  color: #ffffff;
+}
+
+.sg-btn--compact {
+  min-height: 38px;
+  padding: 7px 14px;
+  font-size: var(--sg-text-sm);
+  gap: 8px;
+}
+
+.sg-btn-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sg-icon {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* ==========================================================================
+   Modal Overlay Backdrop (Pause & Settings)
+   ========================================================================== */
+
+.sg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 2.6vh, 32px);
+  background: var(--sg-scrim);
+  animation: sg-fade-in var(--sg-dur-panel) var(--sg-ease) both;
+}
+
+.sg-panel {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(180deg, var(--sg-paper), var(--sg-paper-2));
+  border: 1px solid var(--sg-rule);
+  border-radius: var(--sg-radius-md);
+  box-shadow: var(--sg-shadow-dialog);
+  color: var(--sg-ink);
+  animation: sg-panel-in var(--sg-dur-panel) var(--sg-ease) both;
+}
+
+.sg-eyebrow {
+  font-family: var(--sg-font-ui);
+  font-weight: 700;
+  font-size: var(--sg-text-xs);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--sg-brass-2);
+  margin: 0 0 2px;
+}
+
+.sg-heading {
+  font-family: var(--sg-font-display);
+  font-weight: 700;
+  font-size: var(--sg-text-xl);
+  line-height: 1.12;
+  margin: 0;
+  color: var(--sg-ink);
+}
+
+.sg-rule {
+  height: 1px;
+  border: 0;
+  background: var(--sg-rule-soft);
+  margin: 0;
+}
+
+/* Keycaps (always >= 13.5px) */
+.sg-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  padding: 2px 7px;
+  border-radius: var(--sg-radius-sm);
+  border: 1px solid var(--sg-rule);
+  background: var(--sg-paper-hi);
+  color: var(--sg-ink);
+  font-family: var(--sg-font-ui);
+  font-weight: 700;
+  font-size: var(--sg-text-xs);
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.sg-btn--primary .sg-kbd {
+  background: rgba(245, 241, 232, 0.14);
+  border-color: rgba(245, 241, 232, 0.34);
+  color: var(--sg-limewash);
+}
+
+/* ==========================================================================
+   Settings Panel (fits cleanly on 1920x1080 and 1366x768 without scroll)
+   ========================================================================== */
+
+.sg-panel--settings {
+  max-width: min(920px, 94vw);
+  padding: clamp(20px, 2.8vh, 30px) clamp(24px, 3vw, 36px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2.2vh, 22px);
+}
+
+.sg-panel-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: clamp(12px, 1.6vh, 16px);
+  border-bottom: 1px solid var(--sg-rule);
+}
+
+.sg-settings-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.94fr) minmax(320px, 1.06fr);
+  gap: clamp(22px, 3vw, 40px);
+  align-items: start;
+}
+
+.sg-section {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(11px, 1.45vh, 15px);
+}
+
+.sg-section + .sg-section {
+  margin-top: clamp(16px, 2.2vh, 24px);
+}
+
+.sg-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--sg-rule-soft);
+  font-family: var(--sg-font-display);
+  font-weight: 700;
+  font-size: clamp(18px, 2vh, 21px);
+  color: var(--sg-ink);
+}
+
+.sg-section-title .sg-icon {
+  color: var(--sg-brass-2);
+}
+
+/* Volume Sliders */
+.sg-slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sg-slider-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sg-slider-label {
+  font-weight: 700;
+  font-size: var(--sg-text-sm);
+  color: var(--sg-ink);
+}
+
+.sg-slider-value {
+  font-family: var(--sg-font-display);
+  font-weight: 700;
+  font-size: clamp(15px, 1.6vh, 17px);
+  font-variant-numeric: tabular-nums;
+  color: var(--sg-water-deep);
+  min-width: 3.2em;
+  text-align: right;
+}
+
+.sg-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sg-range:focus-visible {
+  outline: 2.5px solid var(--sg-focus-paper);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.sg-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 2px;
+  border: 1px solid var(--sg-rule);
+  background: linear-gradient(
+    to right,
+    var(--sg-water-deep) 0%,
+    var(--sg-water-deep) var(--sg-fill, 80%),
+    var(--sg-paper-hi) var(--sg-fill, 80%),
+    var(--sg-paper-hi) 100%
+  );
+}
+
+.sg-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 2px;
+  background: var(--sg-tar);
+  border: 2px solid var(--sg-paper-hi);
+  box-shadow: 0 0 0 1px var(--sg-tar), 0 1px 3px rgba(24, 18, 10, 0.35);
+  transition: background-color var(--sg-dur-fast) var(--sg-ease), transform var(--sg-dur-fast) var(--sg-ease);
+}
+
+.sg-range:hover::-webkit-slider-thumb {
+  background: var(--sg-water-deep);
+  transform: scale(1.06);
+}
+
+.sg-range::-moz-range-track {
+  height: 6px;
+  border-radius: 2px;
+  border: 1px solid var(--sg-rule);
+  background: var(--sg-paper-hi);
+}
+
+.sg-range::-moz-range-progress {
+  height: 6px;
+  border-radius: 2px;
+  background: var(--sg-water-deep);
+}
+
+.sg-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 2px;
+  background: var(--sg-tar);
+  border: 2px solid var(--sg-paper-hi);
+  box-shadow: 0 0 0 1px var(--sg-tar);
+}
+
+/* Quality Segmented Control (real radio group) */
+.sg-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sg-fieldset legend {
+  padding: 0;
+  margin-bottom: 4px;
+  font-weight: 700;
+  font-size: var(--sg-text-sm);
+  color: var(--sg-ink);
+}
+
+.sg-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--sg-rule);
+  border-radius: var(--sg-radius-md);
+  background: var(--sg-paper-hi);
+  padding: 3px;
+  gap: 3px;
+}
+
+.sg-seg-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 6px 10px;
+  border-radius: var(--sg-radius-sm);
+  font-weight: 700;
+  font-size: var(--sg-text-sm);
+  color: var(--sg-ink);
+  cursor: pointer;
+  transition: background-color var(--sg-dur-fast) var(--sg-ease), color var(--sg-dur-fast) var(--sg-ease);
+}
+
+.sg-seg-option input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.sg-seg-option:hover {
+  background: var(--sg-paper-hover);
+}
+
+.sg-seg-option:has(input:checked) {
+  background: var(--sg-tar);
+  color: var(--sg-salt);
+}
+
+.sg-seg-option:has(input:focus-visible) {
+  outline: 2.5px solid var(--sg-focus-paper);
+  outline-offset: 2px;
+}
+
+.sg-help-note {
+  margin: 0;
+  font-size: var(--sg-text-sm);
+  color: var(--sg-ink-2);
+  line-height: 1.35;
+}
+
+/* Controls Help Ledger */
+.sg-controls-group + .sg-controls-group {
+  margin-top: clamp(10px, 1.3vh, 14px);
+}
+
+.sg-controls-subhead {
+  margin: 0 0 6px;
+  font-weight: 700;
+  font-size: var(--sg-text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sg-brass-2);
+}
+
+.sg-controls-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sg-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: clamp(5px, 0.72vh, 7px) 0;
+  border-bottom: 1px solid var(--sg-rule-soft);
+}
+
+.sg-control-row:last-child {
+  border-bottom: 0;
+}
+
+.sg-control-row dt {
+  margin: 0;
+  font-size: var(--sg-text-sm);
+  font-weight: 500;
+  color: var(--sg-ink);
+}
+
+.sg-control-row dd {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: var(--sg-text-xs);
+  color: var(--sg-ink-2);
+}
+
+.sg-sep {
+  color: var(--sg-ink-2);
+  font-size: var(--sg-text-xs);
+  padding: 0 1px;
+}
+
+.sg-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: clamp(12px, 1.6vh, 16px);
+  border-top: 1px solid var(--sg-rule);
+}
+
+/* ==========================================================================
+   Pause & Confirm Overlay
+   ========================================================================== */
+
+.sg-panel--pause {
+  max-width: min(410px, 90vw);
+  padding: clamp(24px, 3.2vh, 32px) clamp(24px, 3vw, 34px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sg-pause-head {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--sg-rule);
+}
+
+.sg-pause-sub {
+  margin: 6px 0 0;
+  font-family: var(--sg-font-display);
+  font-style: italic;
+  font-size: clamp(15.5px, 1.65vh, 17px);
+  color: var(--sg-ink-2);
+}
+
+.sg-pause-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sg-pause-actions .sg-btn {
+  width: 100%;
+}
+
+.sg-pause-divider {
+  margin: 4px 0;
+}
+
+.sg-confirm-body {
+  margin: 0;
+  font-size: var(--sg-text-md);
+  color: var(--sg-ink);
+  line-height: 1.45;
+}
+
+.sg-confirm-season {
+  padding: 10px 14px;
+  border: 1px solid var(--sg-rule-soft);
+  border-left: 3px solid var(--sg-brass);
+  border-radius: var(--sg-radius-sm);
+  background: rgba(246, 238, 221, 0.72);
+  font-size: var(--sg-text-sm);
+  color: var(--sg-ink-2);
+}
+
+.sg-confirm-season strong {
+  color: var(--sg-ink);
+  font-weight: 700;
+}
+
+.sg-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.sg-confirm-actions .sg-btn {
+  justify-content: center;
+}
+
+/* ==========================================================================
+   Animations & Reduced Motion
+   ========================================================================== */
+
+@keyframes sg-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sg-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sg-panel-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   Compact Laptop Scaling (1366x768 and shorter viewports)
+   ========================================================================== */
+
+@media (max-height: 820px) {
+  .sg-overlay {
+    padding: 14px 20px;
+  }
+  .sg-panel--settings {
+    padding: 16px 24px;
+    gap: 11px;
+  }
+  .sg-panel-header {
+    padding-bottom: 9px;
+  }
+  .sg-panel-footer {
+    padding-top: 9px;
+  }
+  .sg-section {
+    gap: 9px;
+  }
+  .sg-section + .sg-section {
+    margin-top: 12px;
+  }
+  .sg-slider-row {
+    gap: 4px;
+  }
+  .sg-controls-group + .sg-controls-group {
+    margin-top: 8px;
+  }
+  .sg-control-row {
+    padding: 4px 0;
+  }
+}

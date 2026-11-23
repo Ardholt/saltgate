@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Saltgate</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cpath d=%27M4 26 L16 8 L28 26 Z%27 fill=%27%23fbf8f1%27 stroke=%27%232d2a24%27 stroke-width=%272%27/%3E%3C/svg%3E" />
+<style>
+@font-face { font-family: 'Alegreya'; src: url('./fonts/alegreya-latin-400-normal.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Alegreya'; src: url('./fonts/alegreya-latin-700-normal.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Alegreya'; src: url('./fonts/alegreya-latin-400-italic.woff2') format('woff2'); font-style: italic; font-display: swap; }
+@font-face { font-family: 'Alegreya Sans'; src: url('./fonts/alegreya-sans-latin-500-normal.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Alegreya Sans'; src: url('./fonts/alegreya-sans-latin-700-normal.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+:root {
+  --paper: #efe5cf; --paper2: #e4d6b8; --ink: #2d2a24; --ink2: #5d5446; --brass: #a8834e; --brass2: #7d5f33;
+  --sea: #3f6168; --salt: #fbf8f1; --rust: #9a4b31;
+  --ui: min(1px, 0.075vh) ;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #c9b48e; }
+body { font-family: 'Alegreya Sans', 'Alegreya', Georgia, serif; color: var(--ink); user-select: none; -webkit-user-select: none; }
+#c { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; outline: none; cursor: grab; }
+#c.tool { cursor: crosshair; }
+#c.over { cursor: pointer; }
+#hud { position: fixed; inset: 0; pointer-events: none; font-size: clamp(13px, 1.45vh, 17px); }
+#hud > * { pointer-events: auto; }
+.paper {
+  background: linear-gradient(180deg, var(--paper), var(--paper2));
+  border: 1px solid #b59c72; border-radius: 3px;
+  box-shadow: 0 1px 0 #fff8 inset, 0 6px 18px #2a1f1040, 0 1px 3px #2a1f1050;
+}
+/* tide card */
+#card { position: absolute; left: 1.4vh; top: 1.4vh; padding: 0.9em 1em 0.7em; width: 23em; }
+#card .row { display: flex; align-items: center; justify-content: space-between; gap: 0.6em; }
+#card h1 { font-family: 'Alegreya', serif; font-weight: 700; font-size: 1.35em; letter-spacing: 0.14em; margin: 0; text-transform: uppercase; }
+#card .clock { font-family: 'Alegreya', serif; font-size: 1.15em; }
+#card .sub { color: var(--ink2); font-size: max(13px, 0.95em); }
+#chart { width: 100%; height: 7.6em; display: block; margin: 0.45em 0 0.3em; }
+#moon { width: 2.6em; height: 2.6em; }
+#level { font-weight: 700; }
+#speed { display: flex; gap: 0.3em; margin-top: 0.45em; }
+button { font-family: inherit; font-size: inherit; color: var(--ink); cursor: pointer; }
+.btn { background: #f6eedd; border: 1px solid #b59c72; border-radius: 3px; padding: 0.18em 0.6em; min-width: 2.6em; }
+.btn:hover { background: #fff7e6; }
+.btn.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.key { font-size: max(13px, 0.85em); color: var(--ink2); margin-left: 0.25em; }
+.btn.on .key { color: #d8cbb0; }
+/* stores */
+#stores { position: absolute; right: 1.4vh; top: 1.4vh; display: flex; gap: 0.5em; padding: 0.5em 0.7em; }
+.store { display: flex; align-items: center; gap: 0.35em; padding: 0.15em 0.5em; min-width: 5.2em; }
+.store svg { width: 1.5em; height: 1.5em; }
+.store b { font-family: 'Alegreya', serif; font-size: 1.3em; }
+.store span { color: var(--ink2); font-size: max(13px, 0.85em); }
+.store.bump b { animation: bump 0.6s ease-out; }
+@keyframes bump { 0% { transform: scale(1.5); color: var(--brass2); } 100% { transform: scale(1); } }
+/* trade and season */
+#trade-card { position: absolute; right: 1.4vh; top: 5.2em; width: 20em; padding: 0.7em 0.9em; max-height: min(34em, calc(100vh - 13em)); overflow-y: auto; overscroll-behavior: contain; }
+#boat-next { min-height: 2.6em; }
+#market small { display: block; font-size: 0.78em; color: var(--ink2); max-width: 11em; line-height: 1.15; }
+#cargo-plan { min-height: 4.6em; }
+#look-at { display: flex; gap: 0.3em; align-items: center; flex-wrap: nowrap; }
+#look-at span { color: var(--ink2); font-size: 0.85em; }
+#look-at .btn { min-width: 0 !important; padding-left: 0.5em; padding-right: 0.5em; }
+#trade-card h2 { font: 700 1.2em 'Alegreya', serif; margin: 0 0 0.2em; }
+#boat-status { color: var(--sea); font-weight: 700; }
+#trade-card p { margin: 0.3em 0; color: var(--ink2); }
+#trade-card table { width: 100%; border-collapse: collapse; margin: 0.5em 0; }
+#trade-card td, #trade-card th { text-align: right; padding: 0.2em 0; }
+#trade-card th { font-weight: 500; color: var(--ink2); }
+#trade-card td:first-child, #trade-card th:first-child { text-align: left; }
+#trade-card .btn { min-width: 4.5em; }
+#trade-card[hidden], #season-note:not(.show) { display: none; }
+#hud > #trade-card { pointer-events: auto; }
+#trade-card h2 .btn { float: right; font-size: 0.7em; min-width: 3em; }
+#trade-card.folded > :not(h2) { display: none; }
+#cargo-plan { font-weight: 600; color: var(--ink); }
+#cargo-plan.warn { color: var(--rust); }
+#season-goal #goal-master { display: block; color: var(--ink2); }
+.tool.attn { animation: cuepulse 0.9s ease-in-out infinite alternate; border-color: var(--rust); }
+#trade-card #quay-btn { display: block; width: 100%; margin: 0.4em 0; }
+#trade-card #quay-btn[hidden] { display: none; }
+#season-note { border: 2px solid var(--brass2); font-weight: 700; }
+#trade-card .holding { color: var(--rust); background: #e7d6bc; }
+#trade-card details { border-top: 1px solid #b59c72; padding-top: 0.4em; }
+#trade-card summary { cursor: pointer; }
+#ledger { max-height: 11em; overflow-y: auto; font-size: 13px; }
+.receipt { display: flex; justify-content: space-between; gap: 1em; padding: 0.2em 0; border-bottom: 1px solid #b59c7244; }
+#season-goal { margin: 0.2em 0 0.4em; padding-bottom: 0.5em; border-bottom: 1px solid #b59c72; }
+#season-goal[hidden] { display: none; }
+#season-goal strong { display: block; font-family: 'Alegreya', serif; font-size: 1.1em; }
+progress { accent-color: #47736c; width: 100%; height: 0.7em; }
+#end-card { position: fixed; inset: 0; display: grid; place-items: center; background: #1c252a88; z-index: 20; }
+#end-card[hidden] { display: none; }
+.sg-btn[hidden], .sg-overlay[hidden], .sg-title-screen[hidden], .sg-title-veil[hidden], #hud[hidden] { display: none !important; }
+#end-card article { width: min(34em, 94vw); padding: 1.7em 2em; max-height: 94vh; overflow: auto; }
+#end-card h2 { font: 700 2em 'Alegreya', serif; margin: 0.2em 0; }
+#end-card #end-verdict { font-weight: 700; font-size: 1.12em; margin: 0.3em 0; }
+#end-card .eyebrow { color: var(--brass2); letter-spacing: 0.12em; text-transform: uppercase; }
+#score-lines { margin: 1em 0; }
+#end-card .btn { padding: 0.5em 1.4em; }
+#look-at { display: flex; gap: 0.3em; margin-bottom: 0.5em; flex-wrap: wrap; }
+#look-at .btn { min-width: auto; padding: 0.15em 0.4em; }
+#village { margin-top: 0.5em; }
+#village p { line-height: 1.25; }
+#hire { margin: 0.4em 0; }
+button:disabled { opacity: 0.55; cursor: default; }
+.hand-row { border-top: 1px solid #b59c7244; padding: 0.35em 0; }
+.hand-row label { display: flex; justify-content: space-between; align-items: center; }
+.hand-row .fix { margin-top: 0.2em; }
+#hire.warn { border-color: var(--rust); }
+#hire-note { color: var(--rust) !important; }
+.hand-row span { display: block; color: var(--sea); font-size: 13px; margin-top: 0.2em; }
+select { font: inherit; color: var(--ink); background: #f6eedd; border: 1px solid #b59c72; padding: 0.15em; }
+/* tools */
+#works-card { position: absolute; left: 1.4vh; top: 23.5em; width: 23em; padding: 0.6em 0.8em; max-height: calc(100vh - 33em); overflow-y: auto; }
+#works-card[hidden] { display: none; }
+#hud > #works-card { pointer-events: none; }
+#hud > #works-card button, #hud > #works-card select { pointer-events: auto; }
+#works-card h2 { font: 700 1.15em 'Alegreya', serif; margin: 0 0 0.3em; }
+#works-card p { margin: 0.35em 0; line-height: 1.25; color: var(--ink2); }
+#works-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35em; }
+#works-tools button { text-align: left; padding: 0.3em 0.4em; }
+#works-tools button > span { display: block; font-size: 13px; }
+#work-help { font-weight: 700; }
+#storm-note { margin-top: 0.6em; padding-top: 0.5em; border-top: 1px solid var(--rust); color: var(--rust); line-height: 1.3; }
+#storm-note[hidden] { display: none; }
+#storm-note b, #storm-note span { display: block; }
+#protect-all { margin-top: 0.3em; }
+#tools { position: absolute; left: 50%; bottom: 1.4vh; transform: translateX(-50%); display: flex; gap: 0.35em; padding: 0.45em; }
+.tool { display: flex; flex-direction: column; align-items: center; gap: 0.1em; width: 5.6em; padding: 0.35em 0.2em 0.3em; background: transparent; border: 1px solid transparent; border-radius: 3px; }
+.tool:hover { background: #fff6e2; border-color: #c9b083; }
+.tool.on { background: var(--ink); color: var(--paper); }
+.tool svg { width: 2em; height: 2em; }
+.tool .nm { font-weight: 700; font-size: max(13px, 0.95em); }
+.tool .cs { font-size: max(13px, 0.88em); color: var(--ink2); }
+.tool.on .cs, .tool.on .key { color: #d8cbb0; }
+.tool.on svg { filter: invert(0.92) sepia(0.3); }
+/* hint bubble, pinned to the world */
+#hint { position: absolute; left: 0; top: 0; max-width: 21em; padding: 0.6em 0.85em 0.55em; transform: translate(-50%, calc(-100% - 18px)); transition: opacity 0.35s; opacity: 0; pointer-events: none; }
+#hint.show { opacity: 1; }
+#hint .t { font-family: 'Alegreya', serif; font-size: 1.12em; line-height: 1.25; }
+#hint .s { color: var(--brass2); font-weight: 700; font-size: max(13px, 0.9em); margin-top: 0.2em; letter-spacing: 0.02em; }
+#hint::after { content: ''; position: absolute; left: 50%; bottom: -9px; margin-left: -9px; border: 9px solid transparent; border-bottom: 0; border-top-color: #e4d6b8; filter: drop-shadow(0 2px 1px #2a1f1030); }
+#hint.below { transform: translate(-50%, 18px); }
+#hint.below::after { bottom: auto; top: -9px; border: 9px solid transparent; border-top: 0; border-bottom-color: #e4d6b8; filter: drop-shadow(0 -1px 1px #2a1f1030); }
+#hint.free { transform: translate(-50%, -100%); }
+#hint.free::after { display: none; }
+#tool-help { position: absolute; max-width: 24em; padding: 0.65em 0.9em; z-index: 9; pointer-events: none; font-size: max(13px, 1em); }
+#tool-help[hidden] { display: none; }
+#tool-help b { display: block; font-family: 'Alegreya', serif; margin-bottom: 0.25em; }
+#tool-help span { color: var(--ink2); line-height: 1.3; }
+/* tooltip */
+#tip { position: absolute; left: 0; top: 0; padding: 0.45em 0.7em; max-width: 19em; pointer-events: none; opacity: 0; transition: opacity 0.12s; }
+#tip.show { opacity: 1; }
+#tip .n { font-family: 'Alegreya', serif; font-weight: 700; font-size: 1.05em; }
+#tip .l { color: var(--ink2); font-size: max(13px, 0.92em); line-height: 1.3; }
+#tip.bad .a { color: #b3321f; }
+#tip .a { color: var(--brass2); font-weight: 700; font-size: max(13px, 0.88em); margin-top: 0.15em; }
+/* gains float up from the world */
+#hud > .gain, .gain { pointer-events: none !important; }
+.gain { position: absolute; font-family: 'Alegreya', serif; font-weight: 700; font-size: 1.5em; color: var(--salt); text-shadow: 0 1px 2px #0008, 0 0 10px #0005; pointer-events: none; animation: rise 1.6s ease-out forwards; }
+@keyframes rise { 0% { transform: translate(-50%, 0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(-50%, -70px); opacity: 0; } }
+#paused { position: absolute; left: 50%; top: 2vh; transform: translateX(-50%); padding: 0.3em 1em; font-family: 'Alegreya', serif; letter-spacing: 0.2em; display: none; }
+#paused.show { display: block; }
+#msg { position: absolute; left: 50%; top: 9vh; z-index: 6; transform: translateX(-50%); padding: 0.35em 0.9em; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+#msg.show { opacity: 1; }
+#notes { position: absolute; left: 50%; top: 2vh; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 0.4em; pointer-events: none; z-index: 5; }
+#notes > div { padding: 0.4em 1em; text-align: center; max-width: 34em; display: none; }
+#notes > div.show { display: block; }
+#paused.show { position: static; transform: none; }
+#hold-note { border: 2px solid var(--brass2); font-weight: 700; background: #f3d98a; box-shadow: 0 0 0 5px #d99a1f66; }
+body.clock-stopped::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 4; box-shadow: inset 0 0 0 6px #d99a1faa, inset 0 0 90px #d99a1f55; }
+body.clock-stopped #speed .btn { opacity: 0.55; }
+body.clock-stopped #speed .btn[data-speed="0"] { opacity: 1; background: #d99a1f; color: #2a1f10; border-color: #8a5a0a; animation: cuepulse 0.9s ease-in-out infinite alternate; }
+#trader-cue { border: 2px solid var(--rust); font-weight: 700; animation: cuepulse 0.9s ease-in-out infinite alternate; }
+#nudge { border: 2px dashed var(--brass2); }
+#net-note { border: 2px solid var(--ink2); }
+@keyframes cuepulse { from { box-shadow: 0 0 0 0 #a5583a00; } to { box-shadow: 0 0 0 6px #a5583a55; } }
+#trade-card .btn[data-cargo] { min-width: 6.4em; font-weight: 700; }
+#trade-card .btn[data-cargo]:not(.holding) { background: #d9e0b8; }
+#sound { position: absolute; right: 1.4vh; bottom: 1.4vh; top: auto; padding: 0.2em 0.5em; font-size: max(13px, 0.9em); }
+#menu-btn { position: absolute; right: 1.4vh; bottom: calc(1.4vh + 2.3em); padding: 0.2em 0.5em; font-size: max(13px, 0.9em); }
+@media (max-height: 700px) { #hud { font-size: 13px; } #card { width: 21em; } }
+</style>
+</head>
+<body>
+<canvas id="c" tabindex="0"></canvas>
+<div id="hud" hidden>
+  <div id="card" class="paper">
+    <div class="row"><h1>Saltgate</h1><canvas id="moon" width="64" height="64" title="Moon: full and new moons bring spring tides"></canvas></div>
+    <div class="row"><span class="clock" id="clock">Day 1 · 14:00</span><span class="sub" id="spring">Tides making</span></div>
+    <canvas id="chart" width="560" height="152"></canvas>
+    <div class="row"><span><span id="level">+0.6 m</span> <span class="sub" id="trend">rising</span></span><span class="sub" id="nexts">High 15:00</span></div>
+    <div id="speed">
+      <button class="btn" data-speed="0" title="Pause (Space)">❚❚</button>
+      <button class="btn on" data-speed="1" title="Normal speed (,)">1×</button>
+      <button class="btn" data-speed="3" title="Fast">3×</button>
+      <button class="btn" data-speed="8" title="Fastest (.)">8×</button>
+    </div>
+    <div id="season-goal"><strong id="goal-title">Goal: 1300 shillings by Day 15 · 14:00</strong><span id="goal-text"></span><progress id="goal-progress" max="1300" value="0"></progress><span id="goal-master"></span><span id="goal-time"></span></div>
+    <div id="storm-note" hidden role="status"><b id="storm-title"></b><span id="storm-detail"></span><span id="storm-cost"></span><button class="btn" id="protect-all" hidden>Protect what I can afford</button></div>
+  </div>
+  <div id="stores" class="paper">
+    <div class="store" id="st-salt" title="Salt raked from the pans"><svg viewBox="0 0 32 32"><path d="M4 26 L16 8 L28 26 Z" fill="#fbf8f1" stroke="#2d2a24" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 26 L16 17 L22 26" fill="none" stroke="#b9ad97" stroke-width="1.2"/></svg><b>0</b><span>salt</span></div>
+    <div class="store" id="st-fish" title="Fish from the weirs"><svg viewBox="0 0 32 32"><path d="M4 16 C9 8 19 8 24 16 C19 24 9 24 4 16 Z" fill="#b9c3c4" stroke="#2d2a24" stroke-width="1.6"/><path d="M24 16 L30 10 L30 22 Z" fill="#b9c3c4" stroke="#2d2a24" stroke-width="1.6" stroke-linejoin="round"/><circle cx="9.5" cy="15" r="1.3" fill="#2d2a24"/></svg><b>0</b><span>fish</span></div>
+    <div class="store" id="st-oysters" title="Oysters raked at low water"><svg viewBox="0 0 32 32"><path d="M8 26 C-2 10 13 1 22 7 C35 17 21 30 8 26 Z" fill="#b5b1a3" stroke="#2d2a24" stroke-width="1.6"/><path d="M11 23 Q8 10 21 11 M14 24 Q13 15 23 15" fill="none" stroke="#6c7775"/></svg><b>0</b><span>oysters</span></div>
+    <div class="store" id="st-coin" title="Shillings to build with"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11" fill="#c9a161" stroke="#2d2a24" stroke-width="1.6"/><circle cx="16" cy="16" r="7.5" fill="none" stroke="#7d5f33" stroke-width="1.1"/></svg><b>60</b><span>shillings</span></div>
+  </div>
+  <section id="trade-card" class="paper" aria-label="Trade ledger" hidden>
+    <h2>The high-water trader <button class="btn" id="trade-fold" aria-expanded="true" title="Fold or open this panel">Fold</button></h2>
+    <div id="boat-status">Waiting for the flood</div>
+    <p id="boat-next"></p>
+    <div id="look-at" aria-label="Find on the map"><span>Find on map:</span><button class="btn" data-look="pan">Pan</button><button class="btn" data-look="fish">Weir</button><button class="btn" data-look="oysters">Oysters</button><button class="btn" data-look="quay">Quay</button></div>
+    <table aria-label="Cargo and current prices"><thead><tr><th>Cargo</th><th>sh / unit</th><th>At next landing</th></tr></thead><tbody id="market"></tbody></table>
+    <p id="cargo-plan" role="status"></p>
+    <p><b>The trader lands at high water, once every tide-day.</b> Selling ON sells that cargo at the next landing; OFF keeps it in store for a better price.</p>
+    <div id="trade-more">
+    <button class="btn" id="quay-btn" title="Each berth lets the trader carry 24 more cargo per visit">Quay berth</button>
+    <details><summary id="ledger-summary">Ledger · 60 shillings</summary><div id="ledger"></div></details>
+    <details id="village"><summary id="hand-summary">Village hands · 0 / 4</summary><p>Hands tend gates and gather your harvest. Keep a dry route from the village; spring tides cover low paths.</p><button class="btn" id="hire">Hire a hand · 24 sh</button><p id="hire-note"></p><p id="hand-note"></p><div id="hands"></div></details>
+    </div>
+  </section>
+  <div id="end-card" hidden role="dialog" aria-modal="true" aria-labelledby="end-title"><article class="paper">
+    <div class="eyebrow">Saltgate · season account</div><h2 id="end-title"></h2><p id="end-verdict"></p><p id="end-sub"></p><div id="score-lines"></div>
+    <button id="play-again" class="btn">Play again</button>
+  </article></div>
+  <button id="sound" class="btn" title="Sound (M)">Sound on</button>
+  <button id="menu-btn" class="btn" title="Pause menu (Esc)">Menu <span class="key">Esc</span></button>
+  <div id="tools" class="paper"></div>
+  <section id="works-card" class="paper" hidden><h2>The growing waterworks</h2><div id="works-tools"></div><p id="work-help"></p><p id="works-next"></p><p id="power"></p><p id="dredge-status"></p><button id="repair" class="btn" disabled>Repair <span class="key">R</span> · 24 sh</button><p id="repair-status"></p></section>
+  <div id="tool-help" class="paper" role="tooltip" hidden></div>
+  <div id="hint" class="paper"><div class="t"></div><div class="s"></div></div>
+  <div id="tip" class="paper"><div class="n"></div><div class="l"></div><div class="a"></div></div>
+  <div id="notes"><div id="paused" class="paper">PAUSED</div><div id="hold-note" class="paper" role="status"></div><div id="trader-cue" class="paper" role="status"></div><div id="nudge" class="paper" role="status"></div><div id="net-note" class="paper" role="status"></div><div id="season-note" class="paper" role="status"></div></div>
+  <div id="msg" class="paper"></div>
+</div>
+  <div class="sg-title-veil" id="sg-title-veil" aria-hidden="true"></div>
+  
+    <main id="sg-title-screen" class="sg-title-screen" aria-label="Saltgate title menu">
+      <section class="sg-title-stack">
+        <h1 class="sg-wordmark-wrap">
+          <img class="sg-wordmark" src="./assets/wordmark.svg" alt="Saltgate" />
+        </h1>
+        <p class="sg-tagline">Tides, sluices, and salt</p>
+  
+        <nav class="sg-title-actions" aria-label="Main menu">
+          <button type="button" id="sg-btn-continue" class="sg-btn sg-btn--title-primary" hidden>
+            <span class="sg-btn-label">Continue season</span>
+            <span class="sg-btn-meta" id="sg-save-summary"></span>
+          </button>
+  
+          <button type="button" id="sg-btn-new" class="sg-btn sg-btn--title-primary">
+            <span class="sg-btn-label">New season</span>
+          </button>
+  
+          <button type="button" id="sg-btn-settings" class="sg-btn sg-btn--title-secondary">
+            <span class="sg-btn-left">
+              <svg class="sg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3.4"/>
+                <path d="M12 2.75v2.1M12 19.15v2.1M4.6 7.75l1.82 1.05M17.58 15.2l1.82 1.05M4.6 16.25l1.82-1.05M17.58 8.8l1.82-1.05"/>
+                <circle cx="12" cy="12" r="7.15"/>
+              </svg>
+              <span class="sg-btn-label">Settings</span>
+            </span>
+          </button>
+        </nav>
+      </section>
+    </main>
+  
+  <div id="sg-settings-overlay" class="sg-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="sg-settings-title">
+      <section class="sg-panel sg-panel--settings">
+        <header class="sg-panel-header">
+          <div>
+            <p class="sg-eyebrow">Saltgate · Preferences</p>
+            <h1 id="sg-settings-title" class="sg-heading">Settings</h1>
+          </div>
+          <button type="button" id="sg-settings-back" class="sg-btn sg-btn--secondary sg-btn--compact">
+            <span class="sg-btn-left">
+              <svg class="sg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 12H5.5"/>
+                <path d="M11 6.5L5.5 12 11 17.5"/>
+              </svg>
+              <span>Back</span>
+            </span>
+          </button>
+        </header>
+  
+        <div class="sg-settings-grid">
+          <!-- Left column: Audio & Display -->
+          <div>
+            <div class="sg-section">
+              <h2 class="sg-section-title">
+                <svg class="sg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4.5 9.5h4.2l5.3-4.3v13.6l-5.3-4.3H4.5z"/>
+                  <path d="M17.2 8.7a4.6 4.6 0 0 1 0 6.6"/>
+                  <path d="M19.8 6.1a8.2 8.2 0 0 1 0 11.8"/>
+                </svg>
+                <span>Audio</span>
+              </h2>
+  
+              <div class="sg-slider-row">
+                <div class="sg-slider-head">
+                  <label class="sg-slider-label" for="sg-vol-master">Master volume</label>
+                  <output class="sg-slider-value" id="sg-vol-master-out" for="sg-vol-master">80%</output>
+                </div>
+                <input
+                  type="range"
+                  id="sg-vol-master"
+                  class="sg-range"
+                  data-setting="volume.master"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="80"
+                  style="--sg-fill: 80%;"
+                />
+              </div>
+  
+              <div class="sg-slider-row">
+                <div class="sg-slider-head">
+                  <label class="sg-slider-label" for="sg-vol-music">Ambience volume</label>
+                  <output class="sg-slider-value" id="sg-vol-music-out" for="sg-vol-music">65%</output>
+                </div>
+                <input
+                  type="range"
+                  id="sg-vol-music"
+                  class="sg-range"
+                  data-setting="volume.music"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="65"
+                  style="--sg-fill: 65%;"
+                />
+              </div>
+  
+              <div class="sg-slider-row">
+                <div class="sg-slider-head">
+                  <label class="sg-slider-label" for="sg-vol-effects">Effects volume</label>
+                  <output class="sg-slider-value" id="sg-vol-effects-out" for="sg-vol-effects">85%</output>
+                </div>
+                <input
+                  type="range"
+                  id="sg-vol-effects"
+                  class="sg-range"
+                  data-setting="volume.effects"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value="85"
+                  style="--sg-fill: 85%;"
+                />
+              </div>
+            </div>
+  
+            <div class="sg-section">
+              <h2 class="sg-section-title">Display</h2>
+              <fieldset class="sg-fieldset" data-setting="quality">
+                <legend>Graphics quality</legend>
+                <div class="sg-segmented" role="radiogroup" aria-label="Graphics quality">
+                  <label class="sg-seg-option">
+                    <input type="radio" name="quality" value="low" />
+                    <span>Low</span>
+                  </label>
+                  <label class="sg-seg-option">
+                    <input type="radio" name="quality" value="medium" />
+                    <span>Medium</span>
+                  </label>
+                  <label class="sg-seg-option">
+                    <input type="radio" name="quality" value="high" checked />
+                    <span>High</span>
+                  </label>
+                </div>
+                <p class="sg-help-note">Sets render resolution, shadow detail and how many spray, rain and gull effects are drawn.</p>
+              </fieldset>
+            </div>
+          </div>
+  
+          <!-- Right column: Controls Help (exact bindings from src/camera.js, src/hud.js, src/main.js, src/works.js) -->
+          <div class="sg-section">
+            <h2 class="sg-section-title">Controls</h2>
+  
+            <div class="sg-controls-group">
+              <h3 class="sg-controls-subhead">Camera</h3>
+              <dl class="sg-controls-list">
+                <div class="sg-control-row">
+                  <dt>Orbit &amp; tilt</dt>
+                  <dd><kbd class="sg-kbd">Right-drag</kbd><span class="sg-sep">/</span><kbd class="sg-kbd">Shift + Drag</kbd></dd>
+                </div>
+                <div class="sg-control-row">
+                  <dt>Pan map</dt>
+                  <dd><kbd class="sg-kbd">Left-drag</kbd><span class="sg-sep">/</span><kbd class="sg-kbd">Middle-drag</kbd></dd>
+                </div>
+                <div class="sg-control-row">
+                  <dt>Pan (keyboard)</dt>
+                  <dd><kbd class="sg-kbd">W A S D</kbd><span class="sg-sep">/</span><kbd class="sg-kbd">Arrows</kbd></dd>
+                </div>
+                <div class="sg-control-row">
+                  <dt>Rotate / tilt</dt>
+                  <dd><kbd class="sg-kbd">Q</kbd><kbd class="sg-kbd">E</kbd><span class="sg-sep">/</span><kbd class="sg-kbd">R</kbd><kbd class="sg-kbd">F</kbd></dd>
+                </div>
+                <div class="sg-control-row">
+                  <dt>Zoom</dt>
+                  <dd><kbd class="sg-kbd">Scroll</kbd><span class="sg-sep">/</span><kbd class="sg-kbd">+</kbd><kbd class="sg-kbd">−</kbd></dd>
+                </div>
+              </dl>
+            </div>
+  
+            <div class="sg-controls-group">
+              <h3 class="sg-controls-subhead">Time &amp; works</h3>
+              <dl class="sg-controls-list">
+                <div class="sg-control-row">
+                  <dt>Pause / resume</dt>
+                  <dd><kbd class="sg-kbd">Space</kbd></dd>
+                </div>
+                <div class="sg-control-row">
+                  <dt>Speed (1× · 3× · 8×)</dt>
+                  <dd><kbd class="sg-kbd">,</kbd><span class="sg-sep">/</span><kbd class="sg-kbd">.</kbd></dd>
+                </div>
+                <div class="sg-control-row">
+                  <dt>Tools (Work – Dredge)</dt>
+                  <dd><kbd class="sg-kbd">1</kbd><span class="sg-sep">–</span><kbd class="sg-kbd">8</kbd></dd>
+                </div>
+                <div class="sg-control-row">
+                  <dt>Late works &amp; repair</dt>
+                  <dd><kbd class="sg-kbd">H</kbd><kbd class="sg-kbd">T</kbd><kbd class="sg-kbd">P</kbd><kbd class="sg-kbd">B</kbd><kbd class="sg-kbd">R</kbd></dd>
+                </div>
+                <div class="sg-control-row">
+                  <dt>Mute sound</dt>
+                  <dd><kbd class="sg-kbd">M</kbd></dd>
+                </div>
+                <div class="sg-control-row">
+                  <dt>Cancel tool / back</dt>
+                  <dd><kbd class="sg-kbd">Esc</kbd></dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </div>
+  
+        <footer class="sg-panel-footer">
+          <p class="sg-help-note">Changes apply immediately.</p>
+          <button type="button" id="sg-settings-close" class="sg-btn sg-btn--primary sg-btn--compact">
+            <span>Close</span>
+            <kbd class="sg-kbd">Esc</kbd>
+          </button>
+        </footer>
+      </section>
+    </div>
+  
+  <div id="sg-pause-overlay" class="sg-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="sg-pause-title">
+      <section class="sg-panel sg-panel--pause">
+        <header class="sg-pause-head">
+          <p class="sg-eyebrow" id="sg-pause-eyebrow">Saltgate · Day 1 · 14:00</p>
+          <h1 id="sg-pause-title" class="sg-heading">Paused</h1>
+          <p class="sg-pause-sub">The tide is held.</p>
+        </header>
+  
+        <nav class="sg-pause-actions" aria-label="Pause menu">
+          <button type="button" id="sg-pause-resume" class="sg-btn sg-btn--primary">
+            <span>Resume</span>
+            <kbd class="sg-kbd">Esc</kbd>
+          </button>
+  
+          <button type="button" id="sg-pause-settings" class="sg-btn sg-btn--secondary">
+            <span class="sg-btn-left">
+              <svg class="sg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3.4"/>
+                <path d="M12 2.75v2.1M12 19.15v2.1M4.6 7.75l1.82 1.05M17.58 15.2l1.82 1.05M4.6 16.25l1.82-1.05M17.58 8.8l1.82-1.05"/>
+                <circle cx="12" cy="12" r="7.15"/>
+              </svg>
+              <span>Settings</span>
+            </span>
+          </button>
+  
+          <button type="button" id="sg-pause-menu" class="sg-btn sg-btn--secondary" title="Back to the title screen. Your season is saved: Continue resumes it.">
+            <span>Main menu</span>
+          </button>
+  
+          <hr class="sg-rule sg-pause-divider" />
+  
+          <button type="button" id="sg-pause-new" class="sg-btn sg-btn--quiet-danger">
+            <span>New season</span>
+          </button>
+        </nav>
+      </section>
+    </div>
+  
+  <div id="sg-pause-confirm-overlay" class="sg-overlay" hidden role="alertdialog" aria-modal="true" aria-labelledby="sg-confirm-title" aria-describedby="sg-confirm-desc">
+      <section class="sg-panel sg-panel--pause">
+        <header class="sg-pause-head">
+          <p class="sg-eyebrow">Saltgate · New season</p>
+          <h1 id="sg-confirm-title" class="sg-heading">New season</h1>
+        </header>
+  
+        <p id="sg-confirm-desc" class="sg-confirm-body">Start a new season? This season will be lost.</p>
+  
+        <div class="sg-confirm-season">
+          Current season: <strong id="sg-confirm-season">Day 1 · 14:00 · 60 shillings</strong>
+        </div>
+  
+        <div class="sg-confirm-actions">
+          <button type="button" id="sg-confirm-cancel" class="sg-btn sg-btn--secondary">
+            <span>Cancel</span>
+          </button>
+          <button type="button" id="sg-confirm-ok" class="sg-btn sg-btn--danger">
+            <span>Start again</span>
+          </button>
+        </div>
+      </section>
+    </div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
